@@ -61,7 +61,7 @@ public class UserServiceImpl implements UserServiceI {
 	@Override
 	public List<UserResponseDTO> getUsers(String sortedBy, String filter) {
 		if (filter != null && !filter.isBlank()) {
-			String[] filters = filter.split("\\+");
+			String[] filters = filter.split("\\+|\\s+");
 			if (filters.length != 3) {
 				throw new BusinessException("Invalid filter");
 			}

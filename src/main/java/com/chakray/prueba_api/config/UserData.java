@@ -76,6 +76,10 @@ public class UserData {
 	public Optional<User> findById(UUID id) {
 		return this.users.stream().filter(u -> u.getId().equals(id)).findFirst();
 	}
+	
+	public Optional<User> findByTaxId(String taxId) {
+		return this.users.stream().filter(u -> u.getTaxId().equals(taxId)).findFirst();
+	}
 
 	public User save(User user) {
 		user.setId(UUID.randomUUID());
