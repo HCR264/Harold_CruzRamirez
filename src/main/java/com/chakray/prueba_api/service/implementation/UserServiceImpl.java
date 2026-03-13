@@ -8,16 +8,15 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
 
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+//import org.springframework.transaction.annotation.Transactional;
 
+import com.chakray.prueba_api.config.UserData;
 import com.chakray.prueba_api.dto.request.UserRequestDTO;
 import com.chakray.prueba_api.dto.response.UserResponseDTO;
 import com.chakray.prueba_api.dto.update.UserUpdateDTO;
 import com.chakray.prueba_api.mapper.UserMapper;
 import com.chakray.prueba_api.model.User;
-import com.chakray.prueba_api.repository.UserRepository;
 import com.chakray.prueba_api.service.UserServiceI;
 import com.chakray.prueba_api.shared.exception.BusinessException;
 import com.chakray.prueba_api.shared.exception.ResourceNotFoundException;
@@ -32,12 +31,12 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Transactional(readOnly = true)
+//@Transactional(readOnly = true)
 public class UserServiceImpl implements UserServiceI {
 	private final AesEncryptionUtil aesEncryptionUtil;
 	private final DateUtil dateUtil;
 	private final UserMapper userMapper;
-	private final UserRepository userRepository;
+	private final UserData userData;
 
 	private static final Map<String, String> CONVERT_FIELDS = new HashMap<>();
 	static {
@@ -69,10 +68,11 @@ public class UserServiceImpl implements UserServiceI {
 			String field = toCamelCase(filters[0]);
 			String condition = filters[1];
 			String value = filters[2];
-			List<User> users = userRepository.findAll();
+			List<User> users = userData.findAll();
 
 			Function<User, String> getter = USER_GETTERS.get(field);
-			if (getter == null) throw new BusinessException("Invalid filter field: " + field);
+			if (getter == null)
+				throw new BusinessException("Invalid filter field: " + field);
 			users = users.stream().filter(u -> {
 				String fieldValue = getter.apply(u);
 				return switch (condition) {
@@ -87,21 +87,22 @@ public class UserServiceImpl implements UserServiceI {
 			return userMapper.entityListToResponseList(users);
 		}
 		if (sortedBy == null || sortedBy.isEmpty()) {
-			return userMapper.entityListToResponseList(userRepository.findAll());
+			return userMapper.entityListToResponseList(userData.findAll());
 		}
-		List<User> users = userRepository.findAll(Sort.by(toCamelCase(sortedBy)));
+		List<User> users = userData.findAllSorted(toCamelCase(sortedBy));
 		return userMapper.entityListToResponseList(users);
 	}
 
 	@Override
 	public UserResponseDTO createUser(UserRequestDTO userRequest) throws Exception {
-		if (userRepository.existsByTaxId(userRequest.getTaxId().trim())) {
+		if (userData.existsByTaxId(userRequest.getTaxId().trim())) {
 			throw new BusinessException("Tax_ID already exist");
 		}
+
 		userRequest.setPassword(aesEncryptionUtil.encrypt(userRequest.getPassword().trim()));
 		User user = userMapper.requestToEntity(userRequest);
 		user.setCreatedAt(dateUtil.getCurrentMadagascarTime());
-		return userMapper.entityToResponse(userRepository.save(user));
+		return userMapper.entityToResponse(userData.save(user));
 	}
 
 	@Override
@@ -109,22 +110,22 @@ public class UserServiceImpl implements UserServiceI {
 		if (id == null || userUpdate == null) {
 			throw new BusinessException("Invalid data");
 		}
-		if (userRepository.existsByTaxIdAndIdNot(userUpdate.getTaxId(), id)) {
+		if (userData.existsByTaxIdAndIdNot(userUpdate.getTaxId(), id)) {
 			throw new BusinessException("Tax_ID already exist");
 		}
-		User user = userRepository.findById(id)
+		User user = userData.findById(id)
 				.orElseThrow(() -> new ResourceNotFoundException("Not found user with id: " + id));
-		user = userRepository.save(copyChanges(userUpdate, user));
+		copyChanges(userUpdate, user);
 		return userMapper.entityToResponse(user);
 
 	}
 
 	@Override
 	public void deleteUser(UUID id) {
-		if (!userRepository.existsById(id)) {
+		if (!userData.existsById(id)) {
 			throw new ResourceNotFoundException("User doesn't exist with ID: " + id);
 		}
-		userRepository.deleteById(id);
+		userData.deleteById(id);
 
 	}
 

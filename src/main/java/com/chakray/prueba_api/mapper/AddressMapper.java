@@ -3,13 +3,21 @@ package com.chakray.prueba_api.mapper;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.stereotype.Component;
+
 import com.chakray.prueba_api.dto.request.AddressRequestDTO;
 import com.chakray.prueba_api.dto.response.AddressResponseDTO;
 import com.chakray.prueba_api.model.Address;
 
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
+
 /**
  * Mapper para las clases address
  */
+@Component
+@Data
+@RequiredArgsConstructor
 public class AddressMapper {
 	/**
 	 * Método para convertir un AddressRequestDTO a un Address
