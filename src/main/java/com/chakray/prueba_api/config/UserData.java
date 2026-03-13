@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 
 import com.chakray.prueba_api.model.Address;
 import com.chakray.prueba_api.model.User;
+import com.chakray.prueba_api.util.AesEncryptionUtil;
 import com.chakray.prueba_api.util.DateUtil;
 
 import jakarta.annotation.PostConstruct;
@@ -20,11 +21,12 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class UserData {
 	private final DateUtil dateUtil;
+	private final AesEncryptionUtil aesEncryptionUtil;
 
 	private final List<User> users = new ArrayList<>();
 
 	@PostConstruct
-	public void initUsers() {
+	public void initUsers() throws Exception {
 		Address address1 = Address.builder().id(1L).name("workaddress").street("street 10").countryCode("MX").build();
 
 		Address address2 = Address.builder().id(2L).name("homeaddress").street("street 12").countryCode("MX").build();
@@ -34,7 +36,7 @@ public class UserData {
 		addresses1.add(address2);
 
 		User user1 = User.builder().id(UUID.randomUUID()).email("usuario_1@gmail.com").name("Luis Perez")
-				.phone("+1 55 555 555 55").password("7c4a8d09ca3762af61e59520943dc26494f8941b").taxId("AAAA0101011A1")
+				.phone("+1 55 555 555 55").password(aesEncryptionUtil.encrypt("Password1")).taxId("AAAA0101011A1")
 				.createdAt(dateUtil.getCurrentMadagascarTime()).addresses(addresses1).build();
 
 		Address address3 = Address.builder().id(3L).name("homeaddress").street("Oxford Street 25").countryCode("UK")
@@ -48,7 +50,7 @@ public class UserData {
 		addresses2.add(address4);
 
 		User user2 = User.builder().id(UUID.randomUUID()).email("usuario_2@gmail.com").name("Luisa Perez")
-				.phone("+44 20 7946 0123").password("8c4a8d09ca3762af61e59520943dc26494f8941c").taxId("BBBB0202022B2")
+				.phone("+44 20 7946 0123").password(aesEncryptionUtil.encrypt("contraseña")).taxId("BBBB0202022B2")
 				.createdAt(dateUtil.getCurrentMadagascarTime()).addresses(addresses2).build();
 
 		Address address5 = Address.builder().id(5L).name("officeaddress").street("George Street 42").countryCode("AU")
@@ -62,7 +64,7 @@ public class UserData {
 		addresses3.add(address6);
 
 		User user3 = User.builder().id(UUID.randomUUID()).email("usuario_3@gmail.com").name("Pedro Hernandez")
-				.phone("+61 2 9876 5432").password("9c4a8d09ca3762af61e59520943dc26494f8941d").taxId("CCCC0303033C3")
+				.phone("+61 2 9876 5432").password(aesEncryptionUtil.encrypt("admin123")).taxId("CCCC0303033C3")
 				.createdAt(dateUtil.getCurrentMadagascarTime()).addresses(addresses3).build();
 		this.users.add(user1);
 		this.users.add(user2);
@@ -76,7 +78,7 @@ public class UserData {
 	public Optional<User> findById(UUID id) {
 		return this.users.stream().filter(u -> u.getId().equals(id)).findFirst();
 	}
-	
+
 	public Optional<User> findByTaxId(String taxId) {
 		return this.users.stream().filter(u -> u.getTaxId().equals(taxId)).findFirst();
 	}
